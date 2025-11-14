@@ -2,8 +2,8 @@
 name: Library/mrmugame/Silverbullet-Math
 tags: meta/library
 files:
-  - katex.mjs
-  - katex.min.css
+  - Math/katex.mjs
+  - Math/katex.min.css
   - Math/fonts/KaTeX_Typewriter-Regular.woff2
   - Math/fonts/KaTeX_Size4-Regular.woff2
   - Math/fonts/KaTeX_Size3-Regular.woff2

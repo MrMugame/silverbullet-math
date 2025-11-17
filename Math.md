@@ -56,7 +56,7 @@ The current ${latex.inline[[\KaTeX]]} version is ${latex.katex.version}.
 
 ## Implementation
 ```space-lua
-local location = index.extractFrontmatter(space.readPage(editor.getCurrentPage())).frontmatter.name
+local location = "Library/mrmugame/Silverbullet-Math"
 
 latex = {
   header = string.format("<link rel=\"stylesheet\" href=\"/.fs/%s/katex.min.css\">", location),

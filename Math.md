@@ -61,7 +61,7 @@ local location = "Library/mrmugame/Silverbullet-Math"
 -- TODO: Remove the check for system.getURLPrefix as soon as the API has settled
 latex = {
   header = string.format("<link rel=\"stylesheet\" href=\".fs/%s/katex.min.css\">", location),
-  katex = js.import(string.format("%s/.fs/%s/katex.mjs", system.getURLPrefix and system.getURLPrefix() or "",  location))
+  katex = js.import(string.format("%s.fs/%s/katex.mjs", system.getURLPrefix and system.getURLPrefix() or "/",  location))
 }
 
 function latex.inline(expression)

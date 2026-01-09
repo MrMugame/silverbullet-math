@@ -58,9 +58,10 @@ The current ${latex.inline[[\KaTeX]]} version is ${latex.katex.version}.
 ```space-lua
 local location = "Library/mrmugame/Silverbullet-Math"
 
+-- TODO: Remove the check for system.getURLPrefix as soon as the API has settled
 latex = {
-  header = string.format("<link rel=\"stylesheet\" href=\"/.fs/%s/katex.min.css\">", location),
-  katex = js.import(string.format("/.fs/%s/katex.mjs", location))
+  header = string.format("<link rel=\"stylesheet\" href=\".fs/%s/katex.min.css\">", location),
+  katex = js.import(string.format("%s/.fs/%s/katex.mjs", system.getURLPrefix and system.getURLPrefix() or "",  location))
 }
 
 function latex.inline(expression)
@@ -69,7 +70,7 @@ function latex.inline(expression)
     throwOnError = false,
     displayMode = false
   })
-  
+
   return widget.new {
     display = "inline",
     html = "<span>" .. latex.header .. html .. "</span>"
@@ -82,7 +83,7 @@ function latex.block(expression)
     throwOnError = false,
     displayMode = true
   })
-  
+
   return widget.new {
     display = "block",
     html = "<span>" .. latex.header .. html .. "</span>"

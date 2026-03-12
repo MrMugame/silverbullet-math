@@ -32,10 +32,10 @@ This library implements two new widgets
 - `latex.block(...)` and
 - `latex.inline(...)`,
 
-which can be used to render block and inline level math respectively. Both use ${latex.inline[[\href{https://katex.org/}{\KaTeX}]]} under the hood
+which can be used to render block and inline level math respectively. Both use $\href{https://katex.org/}{\KaTeX}$ under the hood
 
 ## Examples
-Let ${latex.inline[[S]]} be a set and $\circ : S \times S \to S,\; (a, b) \mapsto a \cdot b$ be a binary operation, then the pair $(S, \circ)$ is called a *group* iff
+Let $S$ be a set and $\circ : S \times S \to S,\; (a, b) \mapsto a \cdot b$ be a binary operation, then the pair $(S, \circ)$ is called a *group* iff
 
 1. $\forall a, b \in S, \; a \circ b \in S$ (completeness),
 2. $\forall a,b,c \in S, \; (ab)c = a(bc)$ (associativity),
@@ -48,7 +48,7 @@ $$
 \widehat{f}(\xi) = \int_{-\infty}^{\infty} f(x)\ e^{-i 2\pi \xi x}\,dx, \quad \forall \xi \in \mathbb{R}.
 $$
 ## Info
-The current ${latex.inline[[\KaTeX]]} version is ${latex.katex.version}.
+The current $\KaTeX$ version is ${latex.katex.version}.
 
 ## Syntax
 ```space-lua

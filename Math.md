@@ -35,24 +35,46 @@ This library implements two new widgets
 which can be used to render block and inline level math respectively. Both use ${latex.inline[[\href{https://katex.org/}{\KaTeX}]]} under the hood
 
 ## Examples
-Let ${latex.inline[[S]]} be a set and ${latex.inline[[\circ : S \times S \to S,\; (a, b) \mapsto a \cdot b]]} be a binary operation, then the pair ${latex.inline[[(S, \circ)]]} is called a *group* iff
+Let ${latex.inline[[S]]} be a set and $\circ : S \times S \to S,\; (a, b) \mapsto a \cdot b$ be a binary operation, then the pair $(S, \circ)$ is called a *group* iff
 
-1. ${latex.inline[[\forall a, b \in S, \; a \circ b \in S]]} (completeness),
-2. ${latex.inline[[\forall a,b,c \in S, \; (ab)c = a(bc)]]} (associativity),
-3. ${latex.inline[[\exists e \in S]]} such that ${latex.inline[[\forall a \in S,\; ae=a=ea]]} (identity) and
-4. ${latex.inline[[\forall a \in S,\; \exists b \in S]]} such that ${latex.inline[[ab=e=ba]]} (inverse).
+1. $\forall a, b \in S, \; a \circ b \in S$ (completeness),
+2. $\forall a,b,c \in S, \; (ab)c = a(bc)$ (associativity),
+3. $\exists e \in S$ such that $\forall a \in S,\; ae=a=ea$ (identity) and
+4. $\forall a \in S,\; \exists b \in S$ such that $ab=e=ba$ (inverse).
 
-The Fourier transform of a complex-valued (Lebesgue) integrable function ${latex.inline[[f(x)]]} on the real line, is the complex valued function ${latex.inline[[\hat {f}(\xi )]]}, defined by the integral
-${latex.block[[\widehat{f}(\xi) = \int_{-\infty}^{\infty} f(x)\ e^{-i 2\pi \xi x}\,dx, \quad \forall \xi \in \mathbb{R}.]]}
+The Fourier transform of a complex-valued (Lebesgue) integrable function $f(x)$ on the real line, is the complex valued function $\hat {f}(\xi )$, defined by the integral
 
-## Quality of life
-There are two slash commands to make writing math a little easier,
-
-- `/math` and
-- `/equation`.
-
+$$
+\widehat{f}(\xi) = \int_{-\infty}^{\infty} f(x)\ e^{-i 2\pi \xi x}\,dx, \quad \forall \xi \in \mathbb{R}.
+$$
 ## Info
 The current ${latex.inline[[\KaTeX]]} version is ${latex.katex.version}.
+
+## Syntax
+```space-lua
+syntax.define {
+  name = "LatexInline",
+  startMarker = "\\$(?!\\{)",
+  endMarker = "\\$(?!\\{)",
+  mode = "inline",
+  startMarkerClass = "sb-latex-mark",
+  bodyClass = "sb-latex-body",
+  endMarkerClass = "sb-latex-mark",
+  render = function(body)
+    return latex.inline(body)
+  end
+}
+
+syntax.define {
+  name = "LatexBlock",
+  startMarker = "^\\$\\$$",
+  endMarker = "^\\$\\$$",
+  mode = "block",
+  render = function(body)
+    return latex.block(body)
+  end
+}
+```
 
 ## Implementation
 ```space-lua

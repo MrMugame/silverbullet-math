@@ -76,34 +76,111 @@ syntax.define {
 ```space-lua
 local location = "Library/mrmugame/Silverbullet-Math"
 
+-- Inject the KaTeX stylesheet once into the document <head>.
+-- Previously this was done by embedding a <link> tag inside every widget's
+-- HTML string. That caused a per-render network round-trip (cache validation)
+-- every time CodeMirror's virtual viewport destroyed and recreated a widget
+-- on scroll, producing a visible flash of unstyled math — more noticeable on
+-- slow connections. Injecting it once here means the browser loads the CSS
+-- exactly once and it persists for the lifetime of the page.
+-- The data-katex-css sentinel attribute prevents double-injection if this
+-- space-lua block is evaluated more than once (e.g. after a reload).
+if not js.window.document.querySelector("link[data-katex-css]") then
+  local link = js.window.document.createElement("link")
+  link.rel = "stylesheet"
+  link.href = string.format(".fs/%s/katex.min.css", location)
+  link.setAttribute("data-katex-css", "true")
+  js.window.document.head.appendChild(link)
+end
+
+-- Preload the KaTeX fonts that are needed for typical math rendering.
+-- Without preloading, the browser only discovers fonts after parsing the
+-- stylesheet, creating a waterfall: CSS fetch → font discovery → font fetch.
+-- Preload hints let the browser fetch fonts in parallel with the CSS,
+-- eliminating that waterfall entirely.
+-- Not all 22 bundled fonts are preloaded — only the subset used by ordinary
+-- mathematical text. Exotic fonts (Fraktur, Caligraphic, Typewriter, Script)
+-- are left to lazy-load on demand since most pages never use them.
+local preloadFonts = {
+  "KaTeX_Main-Regular",
+  "KaTeX_Main-Bold",
+  "KaTeX_Main-Italic",
+  "KaTeX_Math-Italic",
+  "KaTeX_Math-BoldItalic",
+  "KaTeX_AMS-Regular",
+  "KaTeX_Size1-Regular",
+  "KaTeX_Size2-Regular",
+  "KaTeX_Size3-Regular",
+  "KaTeX_Size4-Regular",
+  "KaTeX_SansSerif-Regular",
+}
+for _, fontName in ipairs(preloadFonts) do
+  local fontHref = string.format(".fs/%s/fonts/%s.woff2", location, fontName)
+  -- Guard with a sentinel attribute to avoid duplicate <link> elements on
+  -- re-evaluation, same pattern as the stylesheet injection above.
+  if not js.window.document.querySelector(
+    string.format("link[data-katex-font='%s']", fontName)
+  ) then
+    local preload = js.window.document.createElement("link")
+    preload.rel = "preload"
+    preload.href = fontHref
+    preload.setAttribute("as", "font")
+    preload.setAttribute("type", "font/woff2")
+    preload.setAttribute("crossorigin", "anonymous")
+    preload.setAttribute("data-katex-font", fontName)
+    js.window.document.head.appendChild(preload)
+  end
+end
+
 latex = {
-  header = string.format("<link rel=\"stylesheet\" href=\".fs/%s/katex.min.css\">", location),
-  katex = js.import(string.format("%s.fs/%s/katex.mjs", system.getURLPrefix(),  location))
+  -- js.import resolves the ES module once at space-lua initialisation time.
+  -- The resolved module object is stored here and reused for every render call,
+  -- so there is no repeated module fetch or promise re-await on scroll.
+  katex = js.import(string.format("%s.fs/%s/katex.mjs", system.getURLPrefix(), location)),
+
+  -- In-memory render cache. renderToString is a pure function: the same
+  -- (expression, displayMode) pair always produces the same HTML string.
+  -- Caching the result means each unique expression is rendered by KaTeX
+  -- exactly once per session. Subsequent calls — including every scroll-in
+  -- re-render by CodeMirror's virtual viewport — return instantly from memory
+  -- without invoking KaTeX at all.
+  cache = {}
 }
 
-function latex.inline(expression)
+-- Internal helper: render expression via KaTeX, returning cached HTML if
+-- available, or calling renderToString and storing the result otherwise.
+local function renderCached(expression, displayMode)
+  local key = (displayMode and "block:" or "inline:") .. expression
+  -- Use ~= nil rather than a truthiness check: KaTeX always returns a non-empty
+  -- string, but a truthiness check would incorrectly re-render any cached value
+  -- that happens to be falsy (empty string, false, 0 in Lua).
+  if latex.cache[key] ~= nil then
+    return latex.cache[key]
+  end
   local html = latex.katex.renderToString(expression, {
     trust = true,
     throwOnError = false,
-    displayMode = false
+    displayMode = displayMode
   })
+  latex.cache[key] = html
+  return html
+end
 
+function latex.inline(expression)
+  -- Render inline math (displayMode = false keeps the formula on the same
+  -- baseline as surrounding text).
   return widget.new {
     display = "inline",
-    html = "<span>" .. latex.header .. html .. "</span>"
+    html = "<span>" .. renderCached(expression, false) .. "</span>"
   }
 end
 
 function latex.block(expression)
-  local html = latex.katex.renderToString(expression, {
-    trust = true,
-    throwOnError = false,
-    displayMode = true
-  })
-
+  -- Render display math (displayMode = true centres the formula on its own
+  -- line with larger delimiters).
   return widget.new {
     display = "block",
-    html = "<span>" .. latex.header .. html .. "</span>"
+    html = "<span>" .. renderCached(expression, true) .. "</span>"
   }
 end
 ```
